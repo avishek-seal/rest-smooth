@@ -16,7 +16,7 @@ import io.github.restsmooth.constants.ContentType;
  * @since Mar 9, 2017
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 public @interface Resource {
 
 	String name();

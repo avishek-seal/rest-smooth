@@ -2,6 +2,15 @@ package io.github.restsmooth.response;
 
 import java.io.Serializable;
 
+/**
+ * This class is used to create the object of the 
+ * response which is needed to send after application
+ * construct the data/response in a Representational way.
+ * 
+ * @author Avishek Seal
+ * @since Mar 9, 2017
+ * @param <T>
+ */
 public class ApplicationResponse<T> implements Serializable{
 	
 	private static final long serialVersionUID = -534363153955678612L;
