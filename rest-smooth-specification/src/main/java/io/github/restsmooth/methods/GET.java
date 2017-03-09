@@ -1,5 +1,10 @@
 package io.github.restsmooth.methods;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * The GET method means retrieve whatever information (in the form of an entity)
  * is identified by the Request-URI. If the Request-URI refers to a
@@ -27,6 +32,8 @@ package io.github.restsmooth.methods;
  * @author Avishek Seal
  * @since Mar 9, 2017
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
 public @interface GET {
 	
 	String path() default "/";

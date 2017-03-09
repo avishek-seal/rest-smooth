@@ -1,5 +1,10 @@
 package io.github.restsmooth.methods;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * The TRACE method is used to invoke a remote, application-layer loop- back of
  * the request message. The final recipient of the request SHOULD reflect the
@@ -25,6 +30,8 @@ package io.github.restsmooth.methods;
  * @author Avishek Seal
  * @since Mar 9, 2017
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
 public @interface TRACE {
 
 	String headers() default "*";

@@ -1,5 +1,10 @@
 package io.github.restsmooth.methods;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * The DELETE method requests that the origin server delete the resource
  * identified by the Request-URI. This method MAY be overridden by human
@@ -22,6 +27,8 @@ package io.github.restsmooth.methods;
  * @author Avishek Seal
  * @since Mar 9, 2017
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
 public @interface DELETE {
 	
 	String path() default "/";

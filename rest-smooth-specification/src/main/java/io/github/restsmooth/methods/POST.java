@@ -1,5 +1,10 @@
 package io.github.restsmooth.methods;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * The POST method is used to request that the origin server accept the entity
  * enclosed in the request as a new subordinate of the resource identified by
@@ -27,6 +32,8 @@ package io.github.restsmooth.methods;
  * @author Avishek Seal
  * @since Mar 9, 2017
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
 public @interface POST {
 
 	String path() default "/";

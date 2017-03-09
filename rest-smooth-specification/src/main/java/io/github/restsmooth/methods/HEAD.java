@@ -1,5 +1,10 @@
 package io.github.restsmooth.methods;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * The HEAD method is identical to GET except that the server MUST NOT return a
  * message-body in the response. The metainformation contained in the HTTP
@@ -19,6 +24,8 @@ package io.github.restsmooth.methods;
  * @author Avishek Seal
  * @since Mar 9, 2017
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
 public @interface HEAD {
 
 	String headers() default "*";
