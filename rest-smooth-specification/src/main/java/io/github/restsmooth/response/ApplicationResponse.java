@@ -13,7 +13,7 @@ import java.io.Serializable;
  */
 public class ApplicationResponse<T> implements Serializable{
 	
-	private static final long serialVersionUID = -534363153955678612L;
+	private transient static final long serialVersionUID = -534363153955678612L;
 
 	private boolean success;
 	

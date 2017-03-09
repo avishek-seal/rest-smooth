@@ -10,7 +10,7 @@ package io.github.restsmooth.response;
  */
 public class SecureApplicationResponse<T> extends ApplicationResponse<T>{
 
-	private static final long serialVersionUID = -6894684395347053678L;
+	private transient static final long serialVersionUID = -6894684395347053678L;
 
 	private final String token;
 
