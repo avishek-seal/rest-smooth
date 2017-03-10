@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  * partially-retrieved entities to be completed without transferring data
  * already held by the client.
  * 
- * The response to a GET request is cacheable if and only if it meets the
+ * The response to a GET request is cache-able if and only if it meets the
  * 
  * @author Avishek Seal
  * @since Mar 9, 2017

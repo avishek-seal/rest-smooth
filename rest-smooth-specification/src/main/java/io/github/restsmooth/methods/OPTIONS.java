@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * server, without implying a resource action or initiating a resource
  * retrieval.
  * 
- * Responses to this method are not cacheable.
+ * Responses to this method are not cache-able.
  * 
  * If the OPTIONS request includes an entity-body (as indicated by the presence
  * of Content-Length or Transfer-Encoding), then the media type MUST be
