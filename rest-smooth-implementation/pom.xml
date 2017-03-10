@@ -6,4 +6,20 @@
     <version>0.0.1</version>
   </parent>
   <artifactId>rest-smooth-implementation</artifactId>
+  
+  <dependencies>
+  	<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.1.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.el</groupId>
+			<artifactId>javax.el-api</artifactId>
+			<version>3.0.1-b04</version>
+			<scope>provided</scope>
+		</dependency>
+  </dependencies>
 </project>
