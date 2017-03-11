@@ -21,5 +21,11 @@
 			<version>3.0.1-b04</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>io.github.avishek-seal</groupId>
+			<artifactId>rest-smooth-specification</artifactId>
+			<version>0.0.1</version>
+		</dependency>
   </dependencies>
 </project>

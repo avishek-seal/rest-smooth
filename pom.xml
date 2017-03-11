@@ -18,5 +18,6 @@
 	<modules>
 		<module>rest-smooth-specification</module>
 		<module>rest-smooth-implementation</module>
+		<module>rest-smooth-core</module>
 	</modules>
 </project>

@@ -16,5 +16,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface CONNECT {
 	
+	String path() default "/";
+	
 	String headers() default "*";
 }

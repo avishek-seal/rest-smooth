@@ -34,5 +34,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface TRACE {
 
+	String path() default "/";
+	
 	String headers() default "*";
 }

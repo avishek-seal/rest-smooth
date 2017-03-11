@@ -55,5 +55,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface PUT {
 
+	String path() default "/";
+	
 	String headers() default "*";
 }
