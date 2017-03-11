@@ -22,5 +22,6 @@
 - Some Important Feature :
 
     -- There will be both Synchronous and Asynchronous communication presented.
+    
     -- There will be both secure and insecure stateless communication support provided.
 
