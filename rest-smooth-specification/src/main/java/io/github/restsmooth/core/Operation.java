@@ -33,7 +33,7 @@ public class Operation implements Serializable{
 			
 			Annotation[] annotations = parameter.getAnnotations();
 			
-			if(annotations != null && annotations[0] != null) {
+			if(annotations != null && annotations.length > 0) {
 				argument.setAnnotation(annotations[0]);
 			}
 			

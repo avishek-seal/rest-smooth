@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Resource<T> extends AbstractRegisteredGenerator implements Serializable{
+public final class Resource<T> extends AbstractRegisteredGenerator implements Serializable{
 
 	private static final long serialVersionUID = 441892752356309966L;
 	
@@ -23,12 +23,17 @@ public class Resource<T> extends AbstractRegisteredGenerator implements Serializ
 	
 	private final Map<Class<?>, Map<String, Operation>> operations = new HashMap<>();
 	
-	public Resource(String resourceName, String produces, String consumes, Class<T> resourceClass) {
+	private final T resourceInstance;
+	
+	public Resource(String resourceName, String produces, String consumes, Class<T> resourceClass) throws InstantiationException, IllegalAccessException {
 		super();
 		this.resourceName = resourceName;
 		this.produces = produces;
 		this.consumes = consumes;
 		this.resourceClass = resourceClass;
+		
+		resourceInstance = resourceClass.newInstance();
+		
 		populateOperations(resourceClass);
 	}
 
@@ -46,6 +51,10 @@ public class Resource<T> extends AbstractRegisteredGenerator implements Serializ
 
 	public Class<T> getResourceClass() {
 		return resourceClass;
+	}
+
+	public T getResourceInstance() {
+		return resourceInstance;
 	}
 
 	@Override
@@ -82,6 +91,10 @@ public class Resource<T> extends AbstractRegisteredGenerator implements Serializ
 		return true;
 	}
 	
+	public final Operation getOperation(Class<?> method, String path) {
+		return operations.get(method).get(path);
+	}
+	
 	private final void populateOperations(Class<T> resourceClass) {
 		Arrays.asList(resourceClass.getMethods()).forEach(method -> {
 			Annotation[] annotations = method.getAnnotations();
@@ -102,7 +115,7 @@ public class Resource<T> extends AbstractRegisteredGenerator implements Serializ
 						throw new AmbiguousPathException(resourceClass.getClass().getName(), operation.getPath(), operation.getMethod().getName(), oldOperation.getMethod().getName());
 					}
 					
-					operations.put(annotations[0].getClass(), map);
+					operations.put(annotations[0].annotationType(), map);
 				} else {
 					throw new AmbiguousAnnotationsException(resourceClass.getClass().getName(), method.getName(), annotations);
 				}

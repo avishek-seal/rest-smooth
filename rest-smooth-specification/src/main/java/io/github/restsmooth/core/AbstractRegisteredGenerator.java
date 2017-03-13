@@ -1,6 +1,5 @@
 package io.github.restsmooth.core;
 
-import io.github.restsmooth.generator.OperationGenerataor;
 import io.github.restsmooth.methods.CONNECT;
 import io.github.restsmooth.methods.DELETE;
 import io.github.restsmooth.methods.GET;
@@ -43,7 +42,10 @@ public abstract class AbstractRegisteredGenerator implements ResourceFactory{
 			
 			operation.setPath(get.path());
 			operation.setCached(get.cached());
-			operation.setExpiresOn(new Date(get.expiresOn()).toGMTString());
+			
+			if(!get.expiresOn().equals("")) {
+				operation.setExpiresOn(new Date(get.expiresOn()).toGMTString());
+			}
 			
 			return operation;
 		});
@@ -97,10 +99,5 @@ public abstract class AbstractRegisteredGenerator implements ResourceFactory{
 			
 			return operation;
 		});
-	}
-	
-	@Override
-	public OperationGenerataor getOperationGenerataor(Class<?> annotationClass) {
-		return GENERATORS.get(annotationClass);
 	}
 }

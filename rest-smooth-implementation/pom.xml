@@ -1,14 +1,16 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>io.github.avishek-seal</groupId>
-    <artifactId>rest-smooth</artifactId>
-    <version>0.0.1</version>
-  </parent>
-  <artifactId>rest-smooth-implementation</artifactId>
-  
-  <dependencies>
-  	<dependency>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>io.github.avishek-seal</groupId>
+		<artifactId>rest-smooth</artifactId>
+		<version>0.0.1</version>
+	</parent>
+	<artifactId>rest-smooth-implementation</artifactId>
+	<packaging>jar</packaging>
+
+	<dependencies>
+		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.1.0</version>
@@ -21,11 +23,17 @@
 			<version>3.0.1-b04</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>org.reflections</groupId>
+			<artifactId>reflections</artifactId>
+			<version>0.9.11</version>
+		</dependency>
+
 		<dependency>
 			<groupId>io.github.avishek-seal</groupId>
 			<artifactId>rest-smooth-specification</artifactId>
 			<version>0.0.1</version>
 		</dependency>
-  </dependencies>
+	</dependencies>
 </project>
