@@ -2,13 +2,25 @@ package io.github.restsmooth.core;
 
 import io.github.restsmooth.exceptions.AmbiguousAnnotationsException;
 import io.github.restsmooth.exceptions.AmbiguousPathException;
+import io.github.restsmooth.response.ApplicationResponse;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+/**
+ * 
+ * @author Avishek Seal
+ * @since Mar 13, 2017
+ * @param <T>
+ */
 public final class Resource<T> extends AbstractRegisteredGenerator implements Serializable{
 
 	private static final long serialVersionUID = 441892752356309966L;
@@ -25,6 +37,15 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 	
 	private final T resourceInstance;
 	
+	/**
+	 * 
+	 * @param resourceName
+	 * @param produces
+	 * @param consumes
+	 * @param resourceClass
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 */
 	public Resource(String resourceName, String produces, String consumes, Class<T> resourceClass) throws InstantiationException, IllegalAccessException {
 		super();
 		this.resourceName = resourceName;
@@ -91,8 +112,74 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 		return true;
 	}
 	
+	/**
+	 * 
+	 * @param method
+	 * @param path
+	 * @return
+	 */
 	public final Operation getOperation(Class<?> method, String path) {
 		return operations.get(method).get(path);
+	}
+	
+	public final Object invokeOperation(Class<?> method, String path, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+		final ApplicationResponse<?> applicationResponse = new ApplicationResponse<>();
+		
+		try{
+			Map<String, Operation> map = operations.get(method);
+			
+			if(map == null) {
+				applicationResponse.setCode(403);
+				applicationResponse.setMessage("This mehod is not supported");
+				applicationResponse.setSuccess(false);
+			} else {
+				Operation operation = map.get(path);
+				
+				if(operation == null) {
+					applicationResponse.setCode(404);
+					applicationResponse.setMessage("Requested path is not available");
+					applicationResponse.setSuccess(false);
+				} else {
+					final List<Argument> arguments = operation.getArguments();
+					
+					Object[] objects = null;
+					
+					if(arguments != null && !arguments.isEmpty()) {
+						objects = new Object[arguments.size()];
+						
+						int index = 0;
+						
+						for(Argument argument : operation.getArguments()) {
+							if(argument.getAnnotation() == null) {
+								if(argument.getType().equals(HttpServletRequest.class)) {
+									objects[index] = httpServletRequest;
+								} else if(argument.getType().equals(HttpServletResponse.class)) {
+									objects[index] = httpServletResponse;
+								} else if(argument.getType().equals(HttpSession.class)) {
+									objects[index] = httpServletRequest.getSession(false);
+								} else {
+									objects[index] = null;
+								}
+							} else {
+								
+							}
+							
+							index++;
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			applicationResponse.setCode(403);
+			applicationResponse.setMessage("This mehod is not supported");
+			applicationResponse.setSuccess(false);
+		} catch (Error e) {
+			applicationResponse.setCode(500);
+			applicationResponse.setMessage("Internal Server Error");
+			applicationResponse.setSuccess(false);
+		}
+		
+		return applicationResponse;
 	}
 	
 	private final void populateOperations(Class<T> resourceClass) {
@@ -103,7 +190,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 				if(annotations.length == 1) {
 					final Operation operation = getOperationGenerataor(annotations[0].annotationType()).generate(method, annotations[0]);
 					
-					Map<String, Operation> map= operations.get(annotations[0].getClass());
+					Map<String, Operation> map= operations.get(annotations[0].annotationType());
 					
 					if(map == null) {
 						map = new HashMap<>();
@@ -112,7 +199,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 					final Operation oldOperation = map.put(operation.getPath(), operation);
 					
 					if(oldOperation != null) {
-						throw new AmbiguousPathException(resourceClass.getClass().getName(), operation.getPath(), operation.getMethod().getName(), oldOperation.getMethod().getName());
+						throw new AmbiguousPathException(resourceInstance.getClass().getName(), operation.getPath(), operation.getMethod().getName(), oldOperation.getMethod().getName());
 					}
 					
 					operations.put(annotations[0].annotationType(), map);

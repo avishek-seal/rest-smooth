@@ -11,6 +11,18 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.reflections</groupId>
+			<artifactId>reflections</artifactId>
+			<version>0.9.11</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.github.avishek-seal</groupId>
+			<artifactId>rest-smooth-specification</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+		
+		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.1.0</version>
@@ -22,18 +34,6 @@
 			<artifactId>javax.el-api</artifactId>
 			<version>3.0.1-b04</version>
 			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.reflections</groupId>
-			<artifactId>reflections</artifactId>
-			<version>0.9.11</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.github.avishek-seal</groupId>
-			<artifactId>rest-smooth-specification</artifactId>
-			<version>0.0.1</version>
 		</dependency>
 	</dependencies>
 </project>

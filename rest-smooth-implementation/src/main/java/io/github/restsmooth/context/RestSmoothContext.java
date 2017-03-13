@@ -17,7 +17,7 @@ public class RestSmoothContext implements Serializable{
 	
 	private static final Map<String, Resource<?>> RESOURCES = new HashMap<>();
 	
-	{
+	static{
 		final Reflections reflections = new Reflections(CONFIGURATION.getPackageToScan());
 		
 		Set<Class<?>> classes = reflections.getTypesAnnotatedWith(io.github.restsmooh.rules.Resource.class);
@@ -34,16 +34,5 @@ public class RestSmoothContext implements Serializable{
 				e.printStackTrace();
 			}
 		});
-	}
-
-	public static Map<String, Resource<?>> getResources() {
-		return RESOURCES;
-	}
-
-
-
-	@Override
-	public String toString() {
-		return RESOURCES.toString();
 	}
 }
