@@ -1,9 +1,13 @@
 package io.github.restsmooth.core;
 
+import io.github.restsmooh.rules.PathVariable;
+import io.github.restsmooh.rules.Payload;
+import io.github.restsmooh.rules.QueryObject;
 import io.github.restsmooth.exceptions.AmbiguousAnnotationsException;
 import io.github.restsmooth.exceptions.AmbiguousPathException;
 import io.github.restsmooth.response.ApplicationResponse;
 
+import java.io.BufferedReader;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -14,6 +18,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * 
@@ -133,7 +139,9 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 				applicationResponse.setMessage("This mehod is not supported");
 				applicationResponse.setSuccess(false);
 			} else {
-				Operation operation = map.get(path);
+				final ResourceQuery query = new ResourceQuery(path);
+				
+				Operation operation = map.get(query.getPath());
 				
 				if(operation == null) {
 					applicationResponse.setCode(404);
@@ -161,7 +169,30 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 									objects[index] = null;
 								}
 							} else {
-								
+								if(argument.getAnnotation().getClass().equals(Payload.class)) {
+									final StringBuilder jasonBuff = new StringBuilder();
+								     
+									String line = null;
+
+									try (BufferedReader reader = httpServletRequest.getReader()){
+								        while ((line = reader.readLine()) != null) {
+								        	jasonBuff.append(line);
+								        }
+								     }
+									
+									ObjectMapper mapper = new ObjectMapper();
+									
+									mapper.readValue(content, valueType)
+									//Mapping kora baki ache
+								} else if(argument.getAnnotation().getClass().equals(PathVariable.class)) {
+									if(query.isSubPathPresent()) {
+										objects[index] = query.getSubPath();
+									} else {
+										objects[index] = null;
+									}
+								} else if(argument.getAnnotation().getClass().equals(QueryObject.class)) {
+									
+								}
 							}
 							
 							index++;

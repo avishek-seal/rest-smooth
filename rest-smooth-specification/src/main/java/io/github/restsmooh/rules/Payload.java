@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * @since Mar 9, 2017
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target(ElementType.PARAMETER)
 public @interface Payload {
 
 }
