@@ -14,7 +14,8 @@ public class RestSmoothConfiguration {
 	{
 		final Properties properties = new Properties();
 		
-		try(InputStream inputStream = Properties.class.getResourceAsStream("/smooth.properties")) {
+		try(InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("smooth.properties")) {
+			System.out.println(inputStream + " <--- input stream");
 			properties.load(inputStream);
 			
 			Class<RestSmoothConfiguration> configClass = RestSmoothConfiguration.class;

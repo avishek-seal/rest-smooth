@@ -19,6 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /**
@@ -128,8 +130,18 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 		return operations.get(method).get(path);
 	}
 	
+	/**
+	 * this method is used to invoke the appropriate resource method
+	 * to perform the required operation
+	 * 
+	 * @param method
+	 * @param path
+	 * @param httpServletRequest
+	 * @param httpServletResponse
+	 * @return
+	 */
 	public final Object invokeOperation(Class<?> method, String path, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
-		final ApplicationResponse<?> applicationResponse = new ApplicationResponse<>();
+		final ApplicationResponse<Object> applicationResponse = new ApplicationResponse<>();
 		
 		try{
 			Map<String, Operation> map = operations.get(method);
@@ -182,8 +194,9 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 									
 									ObjectMapper mapper = new ObjectMapper();
 									
-									mapper.readValue(content, valueType)
-									//Mapping kora baki ache
+									objects[index] = mapper.readValue(jasonBuff.toString(), argument.getType());
+									
+									//mapper.readValue(httpServletRequest.getInputStream(), argument.getType()); // direct mapping input stream to object
 								} else if(argument.getAnnotation().getClass().equals(PathVariable.class)) {
 									if(query.isSubPathPresent()) {
 										objects[index] = query.getSubPath();
@@ -191,15 +204,37 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 										objects[index] = null;
 									}
 								} else if(argument.getAnnotation().getClass().equals(QueryObject.class)) {
+									ObjectMapper mapper = new ObjectMapper();
 									
+									objects[index] = mapper.convertValue(query.getQuery(), argument.getType());
 								}
 							}
 							
 							index++;
 						}
+					} else {
+						objects = new Object[0];
+					}
+					
+					Object returnedObject = operation.getMethod().invoke(this.resourceInstance, objects); //invoking the method of this resource instance
+					
+					applicationResponse.setCode(200);
+					applicationResponse.setMessage("Success");
+					applicationResponse.setSuccess(true);
+					
+					if(!(returnedObject instanceof Void)) {
+						applicationResponse.setData(returnedObject);
 					}
 				}
 			}
+		} catch(JsonParseException jsonParseException) {
+			applicationResponse.setCode(400);
+			applicationResponse.setMessage(jsonParseException.getMessage());
+			applicationResponse.setSuccess(false);
+		} catch(JsonMappingException jsonMappingException) {
+			applicationResponse.setCode(400);
+			applicationResponse.setMessage(jsonMappingException.getMessage());
+			applicationResponse.setSuccess(false);
 		} catch (Exception e) {
 			applicationResponse.setCode(403);
 			applicationResponse.setMessage("This mehod is not supported");
