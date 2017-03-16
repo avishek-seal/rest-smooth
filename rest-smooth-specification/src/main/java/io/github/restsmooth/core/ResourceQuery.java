@@ -21,35 +21,19 @@ public class ResourceQuery implements Serializable{
 	
 	private Map<String, String> query;
 	
-	public ResourceQuery(String path) {
-		if(path != null && !path.trim().equals("")) {
-			final String[] splitPath = path.split("/");
-			
-			if(splitPath != null && splitPath.length > 0) {
-				this.path = "/";
-				
-				if(splitPath.length == 2) {
-					String[] spliQuery = splitPath[1].split("?");
-					
-					this.subPath = spliQuery[0];
-					
-					subPathPresent = true;
-					
-					if(spliQuery.length == 2) {
-						this.queryParam = spliQuery[1];
-						
-						queryPresent = true;
-					} else {
-						//TODO invalid query 
-					}
-				} else {
-					//TODO throw invalid requested url
-				}
-			} else {
-				this.path = path;
-			}
-		} else {
-			this.path = "/";
+	public ResourceQuery(String path, String query) {
+		String[] pathTokens = path.split("/");
+		
+		this.path = pathTokens[0];
+		
+		if(pathTokens.length > 1) {
+			subPathPresent = true;
+			subPath = pathTokens[1];
+		}
+		
+		if(query != null && !query.trim().equals("")) {
+			this.queryParam = query;
+			this.queryPresent = true;
 		}
 	}
 	

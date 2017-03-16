@@ -56,7 +56,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 	 */
 	public Resource(String resourceName, String produces, String consumes, Class<T> resourceClass) throws InstantiationException, IllegalAccessException {
 		super();
-		this.resourceName = resourceName;
+		this.resourceName = resourceName.replace("/", "");
 		this.produces = produces;
 		this.consumes = consumes;
 		this.resourceClass = resourceClass;
@@ -140,20 +140,20 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 	 * @param httpServletResponse
 	 * @return
 	 */
-	public final Object invokeOperation(Class<?> method, String path, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+	public final Object invokeOperation(Class<?> method, String path, String query, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
 		final ApplicationResponse<Object> applicationResponse = new ApplicationResponse<>();
 		
 		try{
-			Map<String, Operation> map = operations.get(method);
+			final Map<String, Operation> map = operations.get(method);
 			
 			if(map == null) {
 				applicationResponse.setCode(403);
 				applicationResponse.setMessage("This mehod is not supported");
 				applicationResponse.setSuccess(false);
 			} else {
-				final ResourceQuery query = new ResourceQuery(path);
+				final ResourceQuery queryObject = new ResourceQuery(path, query);
 				
-				Operation operation = map.get(query.getPath());
+				final Operation operation = map.get(queryObject.getPath());
 				
 				if(operation == null) {
 					applicationResponse.setCode(404);
@@ -181,7 +181,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 									objects[index] = null;
 								}
 							} else {
-								if(argument.getAnnotation().getClass().equals(Payload.class)) {
+								if(argument.getAnnotation().annotationType().equals(Payload.class)) {
 									final StringBuilder jasonBuff = new StringBuilder();
 								     
 									String line = null;
@@ -192,21 +192,19 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 								        }
 								     }
 									
-									ObjectMapper mapper = new ObjectMapper();
+									objects[index] = MAPPER.readValue(jasonBuff.toString(), argument.getType());
 									
-									objects[index] = mapper.readValue(jasonBuff.toString(), argument.getType());
-									
-									//mapper.readValue(httpServletRequest.getInputStream(), argument.getType()); // direct mapping input stream to object
+									//MAPPER.readValue(httpServletRequest.getInputStream(), argument.getType()); // direct mapping input stream to object
 								} else if(argument.getAnnotation().getClass().equals(PathVariable.class)) {
-									if(query.isSubPathPresent()) {
-										objects[index] = query.getSubPath();
+									if(queryObject.isSubPathPresent()) {
+										objects[index] = queryObject.getSubPath();
 									} else {
 										objects[index] = null;
 									}
 								} else if(argument.getAnnotation().getClass().equals(QueryObject.class)) {
 									ObjectMapper mapper = new ObjectMapper();
 									
-									objects[index] = mapper.convertValue(query.getQuery(), argument.getType());
+									objects[index] = mapper.convertValue(queryObject.getQuery(), argument.getType());
 								}
 							}
 							
@@ -262,7 +260,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 						map = new HashMap<>();
 					}
 					
-					final Operation oldOperation = map.put(operation.getPath(), operation);
+					final Operation oldOperation = map.put(operation.getPath().replace("/", ""), operation);
 					
 					if(oldOperation != null) {
 						throw new AmbiguousPathException(resourceInstance.getClass().getName(), operation.getPath(), operation.getMethod().getName(), oldOperation.getMethod().getName());
