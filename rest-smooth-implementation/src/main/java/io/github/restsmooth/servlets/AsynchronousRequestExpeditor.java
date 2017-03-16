@@ -1,6 +1,13 @@
 package io.github.restsmooth.servlets;
 
+import io.github.restsmooth.async.AsyncRequestProcessor;
+import io.github.restsmooth.context.RestSmoothContext;
+import io.github.restsmooth.listeners.RestSmoothAsyncListener;
+
 import java.io.IOException;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -16,11 +23,10 @@ import javax.servlet.http.HttpServletResponse;
  */
 @WebServlet(asyncSupported = true)
 public final class AsynchronousRequestExpeditor extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-       
-   /**
-    * 
-    */
+	private static final long serialVersionUID = -4431548081796607129L;
+
+	private RestSmoothContext restSmoothContext;
+	
     public AsynchronousRequestExpeditor() {
         super();
     }
@@ -34,7 +40,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws ServletException
 	 */
 	public void init(ServletConfig config) throws ServletException {
-		// TODO Auto-generated method stub
+		restSmoothContext = new RestSmoothContext(config.getServletContext().getContextPath());
 	}
 
 	/**
@@ -44,7 +50,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @return @see javax.servlet.GenericServlet#destroy()
 	 */
 	public void destroy() {
-		// TODO Auto-generated method stub
+		
 	}
 
 	/**
@@ -58,7 +64,10 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		AsyncContext asyncCtx = request.startAsync();
+        asyncCtx.addListener(new RestSmoothAsyncListener());
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) request.getServletContext().getAttribute("executor");
+        executor.execute(new AsyncRequestProcessor("GET", asyncCtx, restSmoothContext));
 	}
 
 	/**

@@ -11,21 +11,23 @@ public class RestSmoothConfiguration {
 	@KEY(name = "smooth.resource.package")
 	private String packageToScan;
 	
+	@KEY(name = "smooth.resource.spring")
+	private boolean springSupport;
+	
 	{
 		final Properties properties = new Properties();
 		
 		try(InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("smooth.properties")) {
-			System.out.println(inputStream + " <--- input stream");
 			properties.load(inputStream);
 			
-			Class<RestSmoothConfiguration> configClass = RestSmoothConfiguration.class;
+			final Class<RestSmoothConfiguration> configClass = RestSmoothConfiguration.class;
 			
 			Arrays.asList(configClass.getDeclaredFields()).forEach(field -> {
 				field.setAccessible(true);
 				
-				Annotation[] annotations = field.getAnnotations();
+				final Annotation[] annotations = field.getAnnotations();
 				
-				KEY key = KEY.class.cast(annotations[0]);
+				final KEY key = KEY.class.cast(annotations[0]);
 				
 				try {
 					field.set(this, properties.get(key));
@@ -33,6 +35,7 @@ public class RestSmoothConfiguration {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+				
 			});
 		} catch (IOException e) {
 			e.printStackTrace();
