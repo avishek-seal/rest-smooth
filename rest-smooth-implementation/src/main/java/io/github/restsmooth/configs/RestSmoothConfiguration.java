@@ -30,7 +30,9 @@ public class RestSmoothConfiguration {
 				final KEY key = KEY.class.cast(annotations[0]);
 				
 				try {
-					field.set(this, properties.get(key));
+					if(properties.get(key) != null) {
+						field.set(this, properties.get(key));
+					}
 					field.setAccessible(false);
 				} catch (Exception e) {
 					e.printStackTrace();

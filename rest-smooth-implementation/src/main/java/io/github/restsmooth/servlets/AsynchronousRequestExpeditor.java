@@ -64,10 +64,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		AsyncContext asyncCtx = request.startAsync();
-        asyncCtx.addListener(new RestSmoothAsyncListener());
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) request.getServletContext().getAttribute("executor");
-        executor.execute(new AsyncRequestProcessor("GET", asyncCtx, restSmoothContext));
+		asyncProcess("GET", request, response);
 	}
 
 	/**
@@ -81,7 +78,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		asyncProcess("POST", request, response);
 	}
 
 	/**
@@ -95,7 +92,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		asyncProcess("PUT", request, response);
 	}
 
 	/**
@@ -109,7 +106,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		asyncProcess("DELETE", request, response);
 	}
 
 	/**
@@ -152,6 +149,13 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 */
 	protected void doTrace(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
+	}
+	
+	private final void asyncProcess(String httpMethod, HttpServletRequest request, HttpServletResponse response) {
+		final AsyncContext asyncCtx = request.startAsync();
+        asyncCtx.addListener(new RestSmoothAsyncListener());
+        final ThreadPoolExecutor executor = (ThreadPoolExecutor) request.getServletContext().getAttribute("executor");
+        executor.execute(new AsyncRequestProcessor(httpMethod, asyncCtx, restSmoothContext));
 	}
 
 }
