@@ -1,9 +1,11 @@
 package io.github.restsmooth.context;
 
+import io.github.restsmooth.async.AsyncRequestProcessor;
 import io.github.restsmooth.configs.RestSmoothConfiguration;
 import io.github.restsmooth.constants.ContentType;
 import io.github.restsmooth.core.Resource;
 import io.github.restsmooth.core.ResourceQuery;
+import io.github.restsmooth.listeners.RestSmoothAsyncListener;
 import io.github.restsmooth.methods.DELETE;
 import io.github.restsmooth.methods.GET;
 import io.github.restsmooth.methods.POST;
@@ -12,10 +14,13 @@ import io.github.restsmooth.sender.ResponseSender;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 
+import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -38,7 +43,16 @@ public class RestSmoothContext implements Serializable{
 		Set<Class<?>> classes = reflections.getTypesAnnotatedWith(io.github.restsmooh.rules.Resource.class);
 		
 		classes.forEach(clazz -> {
-			io.github.restsmooh.rules.Resource resource = io.github.restsmooh.rules.Resource.class.cast(clazz.getAnnotations()[0]);
+			Annotation annotation = null;
+			
+			for(Annotation ano : clazz.getAnnotations()) {
+				if(ano.annotationType().equals(io.github.restsmooh.rules.Resource.class)) {
+					annotation = ano;
+					break;
+				}
+			}
+			
+			io.github.restsmooh.rules.Resource resource = io.github.restsmooh.rules.Resource.class.cast(annotation);
 			
 			try {
 				@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -98,6 +112,13 @@ public class RestSmoothContext implements Serializable{
 		
 		final Resource<?> resource = RESOURCES.get(queryObject.getResourceName());
 		
-		resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, SENDERS.get(resource.getProduces()));
+		if(resource.isMethodAsync(method, queryObject)) {
+			final AsyncContext asyncContext = httpServletRequest.startAsync();
+			asyncContext.addListener(new RestSmoothAsyncListener());
+	        final ThreadPoolExecutor executor = (ThreadPoolExecutor) httpServletRequest.getServletContext().getAttribute("executor");
+	        executor.execute(new AsyncRequestProcessor(resource, method, queryObject, SENDERS.get(resource.getProduces()), asyncContext));
+		} else {
+			resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, SENDERS.get(resource.getProduces()));
+		}
 	}
 }

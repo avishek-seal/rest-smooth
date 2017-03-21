@@ -1,35 +1,28 @@
 package io.github.restsmooth.servlets;
 
-import io.github.restsmooth.async.AsyncRequestProcessor;
 import io.github.restsmooth.context.RestSmoothContext;
-import io.github.restsmooth.listeners.RestSmoothAsyncListener;
 
 import java.io.IOException;
-import java.util.concurrent.ThreadPoolExecutor;
 
-import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
+ * 
  * Servlet implementation class AsynchronousRequestExpeditor
  * 
  * @author Avishek Seal
  * @since Mar 10, 2017
+ *
  */
-@WebServlet(asyncSupported = true)
-public final class AsynchronousRequestExpeditor extends HttpServlet {
-	private static final long serialVersionUID = -4431548081796607129L;
+public final class RequestExpeditor extends HttpServlet {
 
-	private RestSmoothContext restSmoothContext;
+	private static final long serialVersionUID = 286079290995859914L;
 	
-    public AsynchronousRequestExpeditor() {
-        super();
-    }
+	private RestSmoothContext restSmoothContext;
 
 	/**
 	 * 
@@ -50,7 +43,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @return @see javax.servlet.GenericServlet#destroy()
 	 */
 	public void destroy() {
-		
+		// TODO Auto-generated method stub
 	}
 
 	/**
@@ -64,7 +57,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		asyncProcess("GET", request, response);
+		restSmoothContext.get(request, response);
 	}
 
 	/**
@@ -78,7 +71,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		asyncProcess("POST", request, response);
+		restSmoothContext.post(request, response);
 	}
 
 	/**
@@ -92,7 +85,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		asyncProcess("PUT", request, response);
+		restSmoothContext.put(request, response);
 	}
 
 	/**
@@ -106,7 +99,7 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		asyncProcess("DELETE", request, response);
+		restSmoothContext.delete(request, response);
 	}
 
 	/**
@@ -150,12 +143,4 @@ public final class AsynchronousRequestExpeditor extends HttpServlet {
 	protected void doTrace(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 	}
-	
-	private final void asyncProcess(String httpMethod, HttpServletRequest request, HttpServletResponse response) {
-		final AsyncContext asyncCtx = request.startAsync();
-        asyncCtx.addListener(new RestSmoothAsyncListener());
-        final ThreadPoolExecutor executor = (ThreadPoolExecutor) request.getServletContext().getAttribute("executor");
-        executor.execute(new AsyncRequestProcessor(httpMethod, asyncCtx, restSmoothContext));
-	}
-
 }

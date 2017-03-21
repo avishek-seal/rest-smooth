@@ -83,6 +83,14 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 		populateOperations(resourceClass);
 	}
 
+	public boolean isMethodAsync(Class<?> method, ResourceQuery resourceQuery) {
+		if(this.async) {
+			return true;
+		} else {
+			return operations.get(method) == null ? false : operations.get(method).get(resourceQuery.getPath()) == null ? false : operations.get(method).get(resourceQuery.getPath()).isAsync();
+		}
+	}
+	
 	public String getResourceName() {
 		return resourceName;
 	}
@@ -266,20 +274,31 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 			Annotation[] annotations = method.getAnnotations();
 			
 			if(annotations != null && annotations.length > 0) {
-				if(annotations.length == 1) {
-					final Operation operation = getOperationGenerataor(annotations[0].annotationType()).generate(method, annotations[0]);
+				if(annotations.length >= 1 && annotations.length <= 2) {
+					Annotation crudMethod = null;
+					
+					if(annotations.length == 2) {
+						for(Annotation annotation : annotations) {
+							if(!annotation.annotationType().equals(Async.class)) {
+								crudMethod = annotation;
+								break;
+							}
+						}
+					} else {
+						crudMethod = annotations[0];
+					}
+
+					final Operation operation = getOperationGenerataor(crudMethod.annotationType()).generate(method, crudMethod);
 					
 					if(this.async) {
 						operation.setAsync(this.async);
 					} else {
-						Annotation[] methodAnnotations = method.getAnnotations();
-						
-						if(methodAnnotations.length == 2 && (methodAnnotations[0].annotationType().equals(Async.class) || methodAnnotations[1].annotationType().equals(Async.class))) {
+						if(annotations.length == 2 && (annotations[0].annotationType().equals(Async.class) || annotations[1].annotationType().equals(Async.class))) {
 							operation.setAsync(true);
 						}
 					}
 					
-					Map<String, Operation> map= operations.get(annotations[0].annotationType());
+					Map<String, Operation> map= operations.get(crudMethod.annotationType());
 					
 					if(map == null) {
 						map = new HashMap<>();
@@ -291,7 +310,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 						throw new AmbiguousPathException(resourceInstance.getClass().getName(), operation.getPath(), operation.getMethod().getName(), oldOperation.getMethod().getName());
 					}
 					
-					operations.put(annotations[0].annotationType(), map);
+					operations.put(crudMethod.annotationType(), map);
 				} else {
 					throw new AmbiguousAnnotationsException(resourceClass.getClass().getName(), method.getName(), annotations);
 				}

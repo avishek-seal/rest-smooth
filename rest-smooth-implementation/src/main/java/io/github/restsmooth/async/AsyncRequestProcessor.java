@@ -1,6 +1,8 @@
 package io.github.restsmooth.async;
 
-import io.github.restsmooth.context.RestSmoothContext;
+import io.github.restsmooth.core.Resource;
+import io.github.restsmooth.core.ResourceQuery;
+import io.github.restsmooth.sender.ResponseSender;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
@@ -8,34 +10,29 @@ import javax.servlet.http.HttpServletResponse;
 
 public class AsyncRequestProcessor implements Runnable{
 
-	private final RestSmoothContext restSmoothContext;
+	private final Resource<?> resource;
 	
 	private final AsyncContext asyncContext;
 	
-	private final String HTTP_METHOD;
+	private final Class<?> method;
 	
-	public AsyncRequestProcessor(String HTTP_METHOD, AsyncContext asyncContext, RestSmoothContext restSmoothContext) {
-		this.HTTP_METHOD = HTTP_METHOD;
+	private final ResourceQuery queryObject;
+	
+	private final ResponseSender responseSender;
+	
+	public AsyncRequestProcessor(Resource<?> resource, Class<?> method, ResourceQuery queryObject, ResponseSender responseSender, AsyncContext asyncContext) {
+		this.resource = resource;
 		this.asyncContext = asyncContext;
-		this.restSmoothContext = restSmoothContext;
+		this.method = method;
+		this.queryObject = queryObject;
+		this.responseSender = responseSender;
 	}
 	@Override
 	public void run() {
 		try {
 			HttpServletRequest httpServletRequest = HttpServletRequest.class.cast(asyncContext.getRequest());
 			HttpServletResponse httpServletResponse = HttpServletResponse.class.cast(asyncContext.getResponse());
-			
-			if(HTTP_METHOD.equals("GET")) {
-				this.restSmoothContext.get(httpServletRequest, httpServletResponse);
-			} else if(HTTP_METHOD.equals("PUT")) {
-				this.restSmoothContext.put(httpServletRequest, httpServletResponse);
-			} else if(HTTP_METHOD.equals("POST")) {
-				this.restSmoothContext.post(httpServletRequest, httpServletResponse);
-			} else if(HTTP_METHOD.equals("DELETE")) {
-				this.restSmoothContext.delete(httpServletRequest, httpServletResponse);
-			} else if(HTTP_METHOD.equals("OPTIONS")) {
-				
-			}
+			resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, responseSender);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 		}
