@@ -6,8 +6,10 @@ import io.github.restsmooh.rules.QueryObject;
 import io.github.restsmooth.exceptions.AmbiguousAnnotationsException;
 import io.github.restsmooth.exceptions.AmbiguousPathException;
 import io.github.restsmooth.response.ApplicationResponse;
+import io.github.restsmooth.sender.ResponseSender;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -139,8 +141,9 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 	 * @param httpServletRequest
 	 * @param httpServletResponse
 	 * @return
+	 * @throws IOException 
 	 */
-	public final Object invokeOperation(Class<?> method, String path, String query, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+	public final void invokeOperation(Class<?> method, String path, String query, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, ResponseSender responseSender) throws IOException{
 		final ApplicationResponse<Object> applicationResponse = new ApplicationResponse<>();
 		
 		try{
@@ -243,7 +246,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 			applicationResponse.setSuccess(false);
 		}
 		
-		return applicationResponse;
+		responseSender.send(httpServletResponse, applicationResponse);
 	}
 	
 	private final void populateOperations(Class<T> resourceClass) {

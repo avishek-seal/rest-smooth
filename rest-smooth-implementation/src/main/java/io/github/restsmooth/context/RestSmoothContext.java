@@ -7,6 +7,7 @@ import io.github.restsmooth.methods.DELETE;
 import io.github.restsmooth.methods.GET;
 import io.github.restsmooth.methods.POST;
 import io.github.restsmooth.methods.PUT;
+import io.github.restsmooth.sender.ResponseSender;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -19,9 +20,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.reflections.Reflections;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-
 public class RestSmoothContext implements Serializable{
 	private static final long serialVersionUID = 7234557245032842333L;
 
@@ -29,9 +27,7 @@ public class RestSmoothContext implements Serializable{
 	
 	private static final Map<String, Resource<?>> RESOURCES = new HashMap<>();
 	
-	private static final ObjectMapper OBJECTMAPPER = new ObjectMapper();
-	
-	private static final XmlMapper XMLMAPPER = new XmlMapper();
+	private static final Map<String, ResponseSender> SENDERS = new HashMap<>();
 	
 	private final String webApplicationContext;
 	
@@ -50,6 +46,24 @@ public class RestSmoothContext implements Serializable{
 				RESOURCES.put(resource.name().replace("/", ""), resourceMeta);
 			} catch (Exception e) {
 				e.printStackTrace();
+			}
+		});
+		
+		SENDERS.put(ContentType.JSON.getValue(), new ResponseSender() {
+			
+			@Override
+			public void send(HttpServletResponse httpServletResponse, Object object) throws IOException {
+				httpServletResponse.setContentType(ContentType.JSON.getValue());
+				OBJECTMAPPER.writeValue(httpServletResponse.getWriter(), object);
+			}
+		});
+		
+		SENDERS.put(ContentType.XML.getValue(), new ResponseSender() {
+			
+			@Override
+			public void send(HttpServletResponse httpServletResponse, Object object) throws IOException {
+				httpServletResponse.setContentType(ContentType.XML.getValue());
+				XMLMAPPER.writeValue(httpServletResponse.getWriter(), object);
 			}
 		});
 	}
@@ -97,14 +111,6 @@ public class RestSmoothContext implements Serializable{
 			}
 		}
 		
-		final Object object = resource.invokeOperation(method, path.toString(), httpServletRequest.getQueryString(), httpServletRequest, httpServletResponse);
-		
-		httpServletResponse.setContentType(resource.getProduces());
-		
-		if(resource.getProduces().equals(ContentType.JSON.getValue())) {
-			OBJECTMAPPER.writeValue(httpServletResponse.getWriter(), object);
-		} else if(resource.getProduces().equals(ContentType.XML.getValue())) {
-			XMLMAPPER.writeValue(httpServletResponse.getWriter(), object);
-		}
+		resource.invokeOperation(method, path.toString(), httpServletRequest.getQueryString(), httpServletRequest, httpServletResponse, SENDERS.get(resource.getProduces()));
 	}
 }
