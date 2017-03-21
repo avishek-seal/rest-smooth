@@ -17,6 +17,8 @@ public class Operation implements Serializable{
 	
 	private String expiresOn;
 	
+	private boolean async;
+	
 	private final Method method;
 	
 	private final List<Argument> arguments = new LinkedList<>();
@@ -27,6 +29,7 @@ public class Operation implements Serializable{
 		super();
 		this.method = method;
 		this.returnType = method.getReturnType();
+		this.async = false;
 		
 		Arrays.stream(method.getParameters()).forEach(parameter -> {
 			final Argument argument = new Argument(parameter.getType());
@@ -77,5 +80,13 @@ public class Operation implements Serializable{
 
 	public Class<?> getReturnType() {
 		return returnType;
+	}
+
+	public void setAsync(boolean async) {
+		this.async = async;
+	}
+
+	public boolean isAsync() {
+		return async;
 	}
 }

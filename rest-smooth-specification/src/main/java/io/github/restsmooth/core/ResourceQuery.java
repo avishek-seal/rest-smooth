@@ -5,9 +5,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 public class ResourceQuery implements Serializable{
 
 	private static final long serialVersionUID = -3892333350521257265L;
+	
+	private final String resourceName;
 
 	private final String path;
 	
@@ -21,20 +25,27 @@ public class ResourceQuery implements Serializable{
 	
 	private Map<String, String> query;
 	
-	public ResourceQuery(String path, String query) {
-		String[] pathTokens = path.split("/");
+	public ResourceQuery(HttpServletRequest httpServletRequest, String context) {
+		final String requestedResource = httpServletRequest.getRequestURI().replace(context, "");
 		
-		this.path = pathTokens[0];
+		final String[] uriTokens = requestedResource.split("/");
 		
-		if(pathTokens.length > 1) {
-			subPathPresent = true;
-			subPath = pathTokens[1];
+		this.resourceName = uriTokens[1];
+		
+		StringBuilder path = new StringBuilder("");
+		
+		if(uriTokens.length > 2) {
+			for(int index = 2; index < uriTokens.length; index++) {
+				path.append(uriTokens[index]);
+				
+				if(index != uriTokens.length -1) {
+					path.append("/");
+				}
+			}
 		}
 		
-		if(query != null && !query.trim().equals("")) {
-			this.queryParam = query;
-			this.queryPresent = true;
-		}
+		this.path = path.toString();
+		this.queryParam = httpServletRequest.getQueryString();
 	}
 	
 	public Map<String, String> getQuery(){
@@ -57,6 +68,10 @@ public class ResourceQuery implements Serializable{
 		}
 		
 		return query;
+	}
+
+	public String getResourceName() {
+		return resourceName;
 	}
 
 	public String getPath() {

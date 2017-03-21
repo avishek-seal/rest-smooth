@@ -3,6 +3,7 @@ package io.github.restsmooth.context;
 import io.github.restsmooth.configs.RestSmoothConfiguration;
 import io.github.restsmooth.constants.ContentType;
 import io.github.restsmooth.core.Resource;
+import io.github.restsmooth.core.ResourceQuery;
 import io.github.restsmooth.methods.DELETE;
 import io.github.restsmooth.methods.GET;
 import io.github.restsmooth.methods.POST;
@@ -93,24 +94,10 @@ public class RestSmoothContext implements Serializable{
 	}
 	
 	private final void service(Class<?> method, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException{
-		final String requestedResource = httpServletRequest.getRequestURI().replace(webApplicationContext, "");
+		final ResourceQuery queryObject = new ResourceQuery(httpServletRequest, webApplicationContext);
 		
-		final String[] uriTokens = requestedResource.split("/");
+		final Resource<?> resource = RESOURCES.get(queryObject.getResourceName());
 		
-		final Resource<?>  resource = RESOURCES.get(uriTokens[1]);
-		
-		StringBuilder path = new StringBuilder("");
-		
-		if(uriTokens.length > 2) {
-			for(int index = 2; index < uriTokens.length; index++) {
-				path.append(uriTokens[index]);
-				
-				if(index != uriTokens.length -1) {
-					path.append("/");
-				}
-			}
-		}
-		
-		resource.invokeOperation(method, path.toString(), httpServletRequest.getQueryString(), httpServletRequest, httpServletResponse, SENDERS.get(resource.getProduces()));
+		resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, SENDERS.get(resource.getProduces()));
 	}
 }

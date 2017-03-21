@@ -1,5 +1,6 @@
 package io.github.restsmooth.core;
 
+import io.github.restsmooh.rules.Async;
 import io.github.restsmooh.rules.PathVariable;
 import io.github.restsmooh.rules.Payload;
 import io.github.restsmooh.rules.QueryObject;
@@ -43,6 +44,8 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 
 	private final Class<T> resourceClass;
 	
+	private final boolean async;
+	
 	private final Map<Class<?>, Map<String, Operation>> operations = new HashMap<>();
 	
 	private final T resourceInstance;
@@ -62,6 +65,18 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 		this.produces = produces;
 		this.consumes = consumes;
 		this.resourceClass = resourceClass;
+		
+		Annotation[] annotations = resourceClass.getAnnotations();
+		
+		if(annotations.length == 2) {
+			if(annotations[0].annotationType().equals(Async.class) || annotations[1].annotationType().equals(Async.class)) {
+				this.async = true;
+			} else {
+				this.async = false;
+			}
+		} else {
+			this.async = false;
+		}
 		
 		resourceInstance = resourceClass.newInstance();
 		
@@ -143,7 +158,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 	 * @return
 	 * @throws IOException 
 	 */
-	public final void invokeOperation(Class<?> method, String path, String query, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, ResponseSender responseSender) throws IOException{
+	public final void invokeOperation(Class<?> method, ResourceQuery queryObject, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, ResponseSender responseSender) throws IOException{
 		final ApplicationResponse<Object> applicationResponse = new ApplicationResponse<>();
 		
 		try{
@@ -154,8 +169,6 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 				applicationResponse.setMessage("This mehod is not supported");
 				applicationResponse.setSuccess(false);
 			} else {
-				final ResourceQuery queryObject = new ResourceQuery(path, query);
-				
 				final Operation operation = map.get(queryObject.getPath());
 				
 				if(operation == null) {
@@ -196,8 +209,6 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 								     }
 									
 									objects[index] = MAPPER.readValue(jasonBuff.toString(), argument.getType());
-									
-									//MAPPER.readValue(httpServletRequest.getInputStream(), argument.getType()); // direct mapping input stream to object
 								} else if(argument.getAnnotation().getClass().equals(PathVariable.class)) {
 									if(queryObject.isSubPathPresent()) {
 										objects[index] = queryObject.getSubPath();
@@ -237,6 +248,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 			applicationResponse.setMessage(jsonMappingException.getMessage());
 			applicationResponse.setSuccess(false);
 		} catch (Exception e) {
+			e.printStackTrace();
 			applicationResponse.setCode(403);
 			applicationResponse.setMessage("This mehod is not supported");
 			applicationResponse.setSuccess(false);
@@ -256,6 +268,16 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 			if(annotations != null && annotations.length > 0) {
 				if(annotations.length == 1) {
 					final Operation operation = getOperationGenerataor(annotations[0].annotationType()).generate(method, annotations[0]);
+					
+					if(this.async) {
+						operation.setAsync(this.async);
+					} else {
+						Annotation[] methodAnnotations = method.getAnnotations();
+						
+						if(methodAnnotations.length == 2 && (methodAnnotations[0].annotationType().equals(Async.class) || methodAnnotations[1].annotationType().equals(Async.class))) {
+							operation.setAsync(true);
+						}
+					}
 					
 					Map<String, Operation> map= operations.get(annotations[0].annotationType());
 					
