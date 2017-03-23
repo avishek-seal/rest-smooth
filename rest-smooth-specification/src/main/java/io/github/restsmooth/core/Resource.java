@@ -4,12 +4,15 @@ import io.github.restsmooh.rules.Async;
 import io.github.restsmooh.rules.PathVariable;
 import io.github.restsmooh.rules.Payload;
 import io.github.restsmooh.rules.QueryObject;
+import io.github.restsmooth.error.model.ErrorModel;
+import io.github.restsmooth.error.model.RestSmoothError;
 import io.github.restsmooth.exceptions.AmbiguousAnnotationsException;
 import io.github.restsmooth.exceptions.AmbiguousPathException;
+import io.github.restsmooth.exceptions.RestSmoothException;
+import io.github.restsmooth.reciever.RequestReciever;
 import io.github.restsmooth.response.ApplicationResponse;
 import io.github.restsmooth.sender.ResponseSender;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -22,8 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /**
@@ -166,7 +167,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 	 * @return
 	 * @throws IOException 
 	 */
-	public final void invokeOperation(Class<?> method, ResourceQuery queryObject, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, ResponseSender responseSender) throws IOException{
+	public final void invokeOperation(Class<?> method, ResourceQuery queryObject, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, RequestReciever requestReciever, ResponseSender responseSender, RestSmoothError smoothError) throws IOException{
 		final ApplicationResponse<Object> applicationResponse = new ApplicationResponse<>();
 		
 		try{
@@ -206,17 +207,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 								}
 							} else {
 								if(argument.getAnnotation().annotationType().equals(Payload.class)) {
-									final StringBuilder jasonBuff = new StringBuilder();
-								     
-									String line = null;
-
-									try (BufferedReader reader = httpServletRequest.getReader()){
-								        while ((line = reader.readLine()) != null) {
-								        	jasonBuff.append(line);
-								        }
-								     }
-									
-									objects[index] = MAPPER.readValue(jasonBuff.toString(), argument.getType());
+									objects[index] = requestReciever.retrieveObject(httpServletRequest, consumes, argument.getType());
 								} else if(argument.getAnnotation().getClass().equals(PathVariable.class)) {
 									if(queryObject.isSubPathPresent()) {
 										objects[index] = queryObject.getSubPath();
@@ -247,18 +238,20 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 					}
 				}
 			}
-		} catch(JsonParseException jsonParseException) {
-			applicationResponse.setCode(400);
-			applicationResponse.setMessage(jsonParseException.getMessage());
-			applicationResponse.setSuccess(false);
-		} catch(JsonMappingException jsonMappingException) {
-			applicationResponse.setCode(400);
-			applicationResponse.setMessage(jsonMappingException.getMessage());
-			applicationResponse.setSuccess(false);
 		} catch (Exception e) {
-			e.printStackTrace();
-			applicationResponse.setCode(403);
-			applicationResponse.setMessage("This mehod is not supported");
+			ErrorModel errorModel = smoothError.getErrorModel(e.getCause().getClass().getName());
+			
+			if(errorModel != null) {
+				applicationResponse.setCode(errorModel.getCode());
+				applicationResponse.setMessage(errorModel.getMessage());
+			} else if (e instanceof RestSmoothException) {
+				applicationResponse.setCode(((RestSmoothException) e).getCode());
+				applicationResponse.setMessage(e.getMessage());
+			} else {
+				applicationResponse.setCode(500);
+				applicationResponse.setMessage("Internal Server Error");
+			}
+			
 			applicationResponse.setSuccess(false);
 		} catch (Error e) {
 			applicationResponse.setCode(500);

@@ -5,13 +5,18 @@ import io.github.restsmooth.configs.RestSmoothConfiguration;
 import io.github.restsmooth.constants.ContentType;
 import io.github.restsmooth.core.Resource;
 import io.github.restsmooth.core.ResourceQuery;
+import io.github.restsmooth.error.model.RestSmoothError;
+import io.github.restsmooth.error.parser.Unmershaler;
+import io.github.restsmooth.exceptions.InvalidContentType;
 import io.github.restsmooth.listeners.RestSmoothAsyncListener;
 import io.github.restsmooth.methods.DELETE;
 import io.github.restsmooth.methods.GET;
 import io.github.restsmooth.methods.POST;
 import io.github.restsmooth.methods.PUT;
+import io.github.restsmooth.reciever.RequestReciever;
 import io.github.restsmooth.sender.ResponseSender;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -34,6 +39,36 @@ public class RestSmoothContext implements Serializable{
 	private static final Map<String, Resource<?>> RESOURCES = new HashMap<>();
 	
 	private static final Map<String, ResponseSender> SENDERS = new HashMap<>();
+	
+	private static final RestSmoothError REST_SMOOTH_ERROR = Unmershaler.getRestSmoothError();
+	
+	private static final RequestReciever REQUEST_RECIEVER = new RequestReciever() {
+		
+		@Override
+		public <T> T retrieveObject(HttpServletRequest httpServletRequest, String consumes, Class<T> clazz) throws Exception {
+			final StringBuilder jasonBuff = new StringBuilder();
+		     
+			String line = null;
+
+			try (BufferedReader reader = httpServletRequest.getReader()){
+		        while ((line = reader.readLine()) != null) {
+		        	jasonBuff.append(line);
+		        }
+		     }
+			
+			if(httpServletRequest.getContentType().equals(consumes)) {
+				if(consumes.equals(ContentType.JSON.getValue())) {
+					return MAPPER.readValue(jasonBuff.toString(),clazz);
+				} else if (consumes.equals(ContentType.XML.getValue())) {
+					return XMLMAPPER.readValue(jasonBuff.toString(), clazz);
+				} else {
+					return null;
+				}
+			} else {
+				throw new InvalidContentType(consumes, httpServletRequest.getContentType());
+			}
+		}
+	};
 	
 	private final String webApplicationContext;
 	
@@ -69,7 +104,7 @@ public class RestSmoothContext implements Serializable{
 			@Override
 			public void send(HttpServletResponse httpServletResponse, Object object) throws IOException {
 				httpServletResponse.setContentType(ContentType.JSON.getValue());
-				OBJECTMAPPER.writeValue(httpServletResponse.getWriter(), object);
+				MAPPER.writeValue(httpServletResponse.getWriter(), object);
 			}
 		});
 		
@@ -116,9 +151,9 @@ public class RestSmoothContext implements Serializable{
 			final AsyncContext asyncContext = httpServletRequest.startAsync();
 			asyncContext.addListener(new RestSmoothAsyncListener());
 	        final ThreadPoolExecutor executor = (ThreadPoolExecutor) httpServletRequest.getServletContext().getAttribute("executor");
-	        executor.execute(new AsyncRequestProcessor(resource, method, queryObject, SENDERS.get(resource.getProduces()), asyncContext));
+	        executor.execute(new AsyncRequestProcessor(resource, method, queryObject, REQUEST_RECIEVER, SENDERS.get(resource.getProduces()), REST_SMOOTH_ERROR, asyncContext));
 		} else {
-			resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, SENDERS.get(resource.getProduces()));
+			resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, REQUEST_RECIEVER, SENDERS.get(resource.getProduces()), REST_SMOOTH_ERROR);
 		}
 	}
 }

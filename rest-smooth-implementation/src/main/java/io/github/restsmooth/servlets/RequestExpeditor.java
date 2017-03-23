@@ -11,8 +11,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * 
- * Servlet implementation class AsynchronousRequestExpeditor
+ * Central expeditor for HTTP request handlers/resource. Expeditors to
+ * registered resource for processing a Http request, providing convenient
+ * mapping and exception handling facilities. This servlet is very flexible: It
+ * can be used with just about any workflow.
  * 
  * @author Avishek Seal
  * @since Mar 10, 2017

@@ -11,12 +11,8 @@ import io.github.restsmooth.methods.TRACE;
 
 import java.util.Date;
 
-import org.codehaus.jackson.map.ObjectMapper;
-
 @SuppressWarnings("deprecation")
 public abstract class AbstractRegisteredGenerator implements ResourceFactory{
-	
-	protected static final ObjectMapper MAPPER = new ObjectMapper();
 	
 	static{
 		GENERATORS.put(CONNECT.class, (method, annotation) -> {
