@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 /**
  * This annotation is used to map request body or pay load
  * to the java class reference 
+ * 
  * @author Avishek Seal
  * @since Mar 9, 2017
  */
