@@ -25,3 +25,102 @@
     
     -- There will be both secure and insecure stateless communication support provided.
 
+-- Install Rest Smooth Process :
+		1. Clone this project and run mvn install
+		2. Create your own project
+		3. add this dependencies to your pom.xml file
+		
+		<dependency>
+			<groupId>io.github.avishek-seal</groupId>
+			<artifactId>rest-smooth-implementation</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>jackson.json.latest.version</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-xml</artifactId>
+			<version>jackson.xml.latest.version</version>
+		</dependency>
+
+		4. add this servlet information to your web.xml file
+		
+		<servlet>
+			<servlet-name>servlet-name</servlet-name>
+			<servlet-class>io.github.restsmooth.servlets.RequestExpeditor</servlet-class>
+			<load-on-startup>1</load-on-startup>
+			<async-supported>true</async-supported>
+		</servlet>
+	
+		<servlet-mapping>
+			<servlet-name>servlet-name</servlet-name>
+			<url-pattern>/</url-pattern>
+		</servlet-mapping>
+		
+		5. Start coding REST API(s).
+		
+		6. Sample Code :
+		
+		package com.test.resources;
+
+		import io.github.restsmooh.rules.Async;
+		import io.github.restsmooh.rules.Payload;
+		import io.github.restsmooh.rules.Resource;
+		import io.github.restsmooth.methods.DELETE;
+		import io.github.restsmooth.methods.GET;
+		import io.github.restsmooth.methods.POST;
+		import io.github.restsmooth.methods.PUT;
+		
+		import javax.servlet.http.HttpServletRequest;
+		import javax.servlet.http.HttpServletResponse;
+		
+		import com.test.exception.CustomException;
+		import com.test.model.Employee;
+		
+		@Resource(name="/employee")
+		public class EmployeeResource {
+		
+			@Async // <-- using this annotation will make the method to be executed asynchronously, i.e. separate thread pool
+			@GET   // will be assigned to execute this process other than Http Servlet thread pool
+			public Object getEmployee(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse){
+				
+				for(int i = 0; i < 10; i++) {
+					try {
+						Thread.sleep(500);
+						System.out.println("Processing " + Thread.currentThread().getName());
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				
+				return new Employee(2, "Avishek Seal", 10000.0);
+			}
+			
+			@GET(path="/all")
+			public Object getEmployees(){
+				System.out.println("2 GET INVOKED");
+				return null;
+			}
+			
+			@PUT
+			public void createEmployee(@Payload Employee employee) throws CustomException {
+				System.out.println("CREEAT " + employee);
+				throw new CustomException();
+			}
+			
+			@POST
+			public void updateEmployee(@Payload Employee employee) {
+				System.out.println("UPDATE " + employee);
+			}
+			
+			@DELETE
+			public void deleteEmployee(@Payload Employee employee) {
+				System.out.println("DELETE " + employee);
+			}
+		}
+				
