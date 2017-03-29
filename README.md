@@ -25,7 +25,8 @@
     
     -- There will be both secure and insecure stateless communication support provided.
 
--- Install Rest Smooth Process :
+- Install Rest Smooth Process :
+	
 		1. Clone this project and run mvn install
 		2. Create your own project
 		3. add this dependencies to your pom.xml file
