@@ -65,7 +65,38 @@
 		
 		5. Start coding REST API(s).
 		
-		6. Sample Code :
+		6. add a properties file named 'smooth.properties' to your project's class path resource. put the below properties in that file:
+		
+			smooth.resource.package = com.test.resource
+		
+		7. If you want to map specific exceptions to a specific code and message (for binding that to the response string),
+		add smooth-error-mapper.json file to the project class path resource. the file content will look like :
+		
+			{
+				"errors" : {
+					"org.codehaus.jackson.JsonParseException" : {
+						"code" : "400",
+						"message" : "Bad Request"
+					},
+					
+					"org.codehaus.jackson.map.JsonMappingException" : {
+						"code" : "400",
+						"message" : "Bad Request"
+					},
+					
+					"com.fasterxml.jackson.core.JsonParseException" : {
+						"code" : "400",
+						"message" : "Bad Request"
+					},
+					
+					"com.test.exception.CustomException" : {
+						"code" : "105",
+						"message" : "This is a custom error"
+					}
+				}
+			}
+		
+		8. Sample Code :
 		
 		package com.test.resources;
 
