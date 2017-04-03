@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -83,12 +84,17 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 		
 		populateOperations(resourceClass);
 	}
+	
+	public boolean isMethodSupported(Class<?> method, ResourceQuery resourceQuery) {
+		return operations.get(method) != null && operations.get(method).get(resourceQuery.getPath()) != null;
+	}
 
 	public boolean isMethodAsync(Class<?> method, ResourceQuery resourceQuery) {
 		if(this.async) {
 			return true;
 		} else {
-			return operations.get(method) == null ? false : operations.get(method).get(resourceQuery.getPath()) == null ? false : operations.get(method).get(resourceQuery.getPath()).isAsync();
+			return operations.get(method).get(resourceQuery.getPath()).isAsync();
+//			return operations.get(method) == null ? false : operations.get(method).get(resourceQuery.getPath()) == null ? false : operations.get(method).get(resourceQuery.getPath()).isAsync();
 		}
 	}
 	
@@ -167,7 +173,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 	 * @return
 	 * @throws IOException 
 	 */
-	public final void invokeOperation(Class<?> method, ResourceQuery queryObject, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, RequestReciever requestReciever, ResponseSender responseSender, RestSmoothError smoothError) throws IOException{
+	public final void invokeOperation(Class<?> method, ResourceQuery queryObject, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, RequestReciever requestReciever, ResponseSender responseSender, RestSmoothError smoothError, AsyncContext asyncContext) throws IOException{
 		final ApplicationResponse<Object> applicationResponse = new ApplicationResponse<>();
 		
 		try{
@@ -239,7 +245,13 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 				}
 			}
 		} catch (Exception e) {
-			ErrorModel errorModel = smoothError.getErrorModel(e.getCause().getClass().getName());
+			ErrorModel errorModel = null;
+			
+			if(e.getCause() == null) {
+				errorModel = smoothError.getErrorModel(e.getClass().getName());
+			} else {
+				errorModel = smoothError.getErrorModel(e.getCause().getClass().getName());
+			}
 			
 			if(errorModel != null) {
 				applicationResponse.setCode(errorModel.getCode());
@@ -259,7 +271,7 @@ public final class Resource<T> extends AbstractRegisteredGenerator implements Se
 			applicationResponse.setSuccess(false);
 		}
 		
-		responseSender.send(httpServletResponse, applicationResponse);
+		responseSender.send(httpServletResponse, applicationResponse, asyncContext);
 	}
 	
 	private final void populateOperations(Class<T> resourceClass) {

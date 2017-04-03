@@ -1,12 +1,11 @@
 package io.github.restsmooth.listeners;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
-import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebListener;
+import javax.servlet.http.HttpServletResponse;
 
 @WebListener
 public class RestSmoothAsyncListener implements AsyncListener {
@@ -29,8 +28,9 @@ public class RestSmoothAsyncListener implements AsyncListener {
 	@Override
 	public void onTimeout(AsyncEvent asyncEvent) throws IOException {
 		System.out.println("AppAsyncListener onTimeout");
-		ServletResponse response = asyncEvent.getAsyncContext().getResponse();
-		PrintWriter out = response.getWriter();
-		out.write("TimeOut Error in Processing");
+		HttpServletResponse response = HttpServletResponse.class.cast(asyncEvent.getAsyncContext().getResponse());
+		response.setStatus(200);
+//		PrintWriter out = response.getWriter();
+//		out.write("TimeOut Error in Processing");
 	}
 }

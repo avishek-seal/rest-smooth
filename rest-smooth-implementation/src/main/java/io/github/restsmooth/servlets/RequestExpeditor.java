@@ -115,7 +115,7 @@ public final class RequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doHead(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		restSmoothContext.head(request, response);
 	}
 
 	/**
@@ -129,7 +129,7 @@ public final class RequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doOptions(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		restSmoothContext.options(request, response);
 	}
 
 	/**
@@ -143,6 +143,6 @@ public final class RequestExpeditor extends HttpServlet {
 	 * @throws IOException
 	 */
 	protected void doTrace(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		restSmoothContext.trace(request, response);
 	}
 }

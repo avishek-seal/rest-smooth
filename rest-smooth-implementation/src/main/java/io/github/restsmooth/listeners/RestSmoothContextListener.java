@@ -14,7 +14,7 @@ public class RestSmoothContextListener implements ServletContextListener{
 	private static final String EXECUTOR_NAME = "executor";
 	private static final int POOL_SIZE = 100;
 	private static final int MAX_POOL_SIZE = 200;
-	private static final long KEEP_ALIVE_MILI_SECONDS = 50000L;
+	private static final long KEEP_ALIVE_MILI_SECONDS = 5000000L;
 	
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {

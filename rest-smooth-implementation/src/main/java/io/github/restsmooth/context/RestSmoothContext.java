@@ -11,9 +11,13 @@ import io.github.restsmooth.exceptions.InvalidContentType;
 import io.github.restsmooth.listeners.RestSmoothAsyncListener;
 import io.github.restsmooth.methods.DELETE;
 import io.github.restsmooth.methods.GET;
+import io.github.restsmooth.methods.HEAD;
+import io.github.restsmooth.methods.OPTIONS;
 import io.github.restsmooth.methods.POST;
 import io.github.restsmooth.methods.PUT;
+import io.github.restsmooth.methods.TRACE;
 import io.github.restsmooth.reciever.RequestReciever;
+import io.github.restsmooth.response.ApplicationResponse;
 import io.github.restsmooth.sender.ResponseSender;
 
 import java.io.BufferedReader;
@@ -75,7 +79,7 @@ public class RestSmoothContext implements Serializable{
 	static{
 		final Reflections reflections = new Reflections(CONFIGURATION.getPackageToScan());
 		
-		Set<Class<?>> classes = reflections.getTypesAnnotatedWith(io.github.restsmooh.rules.Resource.class);
+		final Set<Class<?>> classes = reflections.getTypesAnnotatedWith(io.github.restsmooh.rules.Resource.class);
 		
 		classes.forEach(clazz -> {
 			Annotation annotation = null;
@@ -102,18 +106,28 @@ public class RestSmoothContext implements Serializable{
 		SENDERS.put(ContentType.JSON.getValue(), new ResponseSender() {
 			
 			@Override
-			public void send(HttpServletResponse httpServletResponse, Object object) throws IOException {
+			public void send(HttpServletResponse httpServletResponse, Object object, AsyncContext asyncContext) throws IOException {
 				httpServletResponse.setContentType(ContentType.JSON.getValue());
 				MAPPER.writeValue(httpServletResponse.getWriter(), object);
+				
+				if(asyncContext != null) {
+					asyncContext.complete();
+				}
 			}
 		});
 		
 		SENDERS.put(ContentType.XML.getValue(), new ResponseSender() {
 			
 			@Override
-			public void send(HttpServletResponse httpServletResponse, Object object) throws IOException {
+			public void send(HttpServletResponse httpServletResponse, Object object, AsyncContext asyncContext) throws IOException {
 				httpServletResponse.setContentType(ContentType.XML.getValue());
-				XMLMAPPER.writeValue(httpServletResponse.getWriter(), object);
+				String xml = XMLMAPPER.writeValueAsString(object);
+				httpServletResponse.getWriter().write(xml);
+//				XMLMAPPER.writeValue(httpServletResponse.getWriter(), object);
+				
+				if(asyncContext != null) {
+					asyncContext.complete();
+				}
 			}
 		});
 	}
@@ -142,18 +156,45 @@ public class RestSmoothContext implements Serializable{
 		service(DELETE.class, httpServletRequest, httpServletResponse);
 	}
 	
+	public final void options(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+		service(OPTIONS.class, httpServletRequest, httpServletResponse);
+	}
+	
+	public final void head(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+		service(HEAD.class, httpServletRequest, httpServletResponse);
+	}
+	
+	public final void trace(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+		service(TRACE.class, httpServletRequest, httpServletResponse);
+	}
+	
 	private final void service(Class<?> method, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException{
 		final ResourceQuery queryObject = new ResourceQuery(httpServletRequest, webApplicationContext);
 		
 		final Resource<?> resource = RESOURCES.get(queryObject.getResourceName());
 		
-		if(resource.isMethodAsync(method, queryObject)) {
-			final AsyncContext asyncContext = httpServletRequest.startAsync();
-			asyncContext.addListener(new RestSmoothAsyncListener());
-	        final ThreadPoolExecutor executor = (ThreadPoolExecutor) httpServletRequest.getServletContext().getAttribute("executor");
-	        executor.execute(new AsyncRequestProcessor(resource, method, queryObject, REQUEST_RECIEVER, SENDERS.get(resource.getProduces()), REST_SMOOTH_ERROR, asyncContext));
+		if(resource != null) {
+			if(resource.isMethodSupported(method, queryObject)) {
+				if(resource.isMethodAsync(method, queryObject)) {
+					final AsyncContext asyncContext = httpServletRequest.startAsync();
+					asyncContext.addListener(new RestSmoothAsyncListener());
+			        final ThreadPoolExecutor executor = (ThreadPoolExecutor) httpServletRequest.getServletContext().getAttribute("executor");
+			        executor.execute(new AsyncRequestProcessor(resource, method, queryObject, REQUEST_RECIEVER, SENDERS.get(resource.getProduces()), REST_SMOOTH_ERROR, asyncContext));
+				} else {
+					resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, REQUEST_RECIEVER, SENDERS.get(resource.getProduces()), REST_SMOOTH_ERROR, null);
+				}
+			} else {
+				ApplicationResponse<?> object = new ApplicationResponse<Object>();
+				
+				object.setCode(400);
+				object.setSuccess(false);
+				object.setData(null);
+				object.setMessage("Requested URL and Method Combination not supported for this resource");
+				
+				SENDERS.get(resource.getProduces()).send(httpServletResponse, object, null);
+			}
 		} else {
-			resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, REQUEST_RECIEVER, SENDERS.get(resource.getProduces()), REST_SMOOTH_ERROR);
+			httpServletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
 		}
 	}
 }

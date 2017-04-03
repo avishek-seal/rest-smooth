@@ -40,7 +40,7 @@ public class AsyncRequestProcessor implements Runnable{
 		try {
 			HttpServletRequest httpServletRequest = HttpServletRequest.class.cast(asyncContext.getRequest());
 			HttpServletResponse httpServletResponse = HttpServletResponse.class.cast(asyncContext.getResponse());
-			resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, requestReciever, responseSender, restSmoothError);
+			resource.invokeOperation(method, queryObject, httpServletRequest, httpServletResponse, requestReciever, responseSender, restSmoothError, asyncContext);
 		} catch (Exception exception) {
 			exception.printStackTrace();
 		}
